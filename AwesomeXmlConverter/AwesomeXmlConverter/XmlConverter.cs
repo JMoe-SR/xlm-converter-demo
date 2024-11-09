@@ -1,65 +1,86 @@
+using System.Text;
+
 namespace AwesomeXmlConverter;
 
-public class XmlConverter : IXmlConverter
+public class XmlConverter
 {
-    private void ParseLine(string input)
+    private readonly LineValidator _lineValidator = new();
+    private readonly LineConverter _lineConverter = new();
+
+    public string ConvertLinesToXml(List<string> lines)
     {
-        LineTypeHelper.LineType? lineType = LineTypeHelper.GetLineType(input);
-        if (lineType == null)
+        // filter out invalid lines
+        lines = lines.Where(line => _lineValidator.ValidateLine(line)).ToList();
+
+        var result = new StringBuilder();
+        result.Append("<people>\n");
+
+        // group lines into people and parse each person individually
+        var people = GroupLinesIntoPeople(lines);
+        foreach (var person in people)
         {
-            return;
+            result.Append(ParsePerson(person.Value));
         }
 
-        switch (lineType)
+        result.Append("</people>");
+        return result.ToString();
+    }
+
+    private Dictionary<int, List<string>> GroupLinesIntoPeople(List<string> lines)
+    {
+        var people = new Dictionary<int, List<string>>();
+        int currentPerson = 0;
+        foreach (var line in lines)
         {
-            case LineTypeHelper.LineType.FullName:
-                ConvertFullName(input);
-                break;
-            case LineTypeHelper.LineType.Phone:
-                ConvertPhone(input);
-                break;
-            case LineTypeHelper.LineType.Address:
-                ConvertAddress(input);
-                break;
-            case LineTypeHelper.LineType.DateOfBirth:
-                ConvertDateOfBirth(input);
-                break;
-            case null:
-                throw new NotImplementedException();
+            var lineType = LineTypeHelper.GetLineType(line);
+            if (lineType == LineTypeHelper.LineType.FullName)
+            {
+                currentPerson++;
+                people.Add(currentPerson, new List<string>());
+            }
+
+            people[currentPerson].Add(line);
         }
+
+        return people;
     }
 
-    public string ConvertDateOfBirth(string input)
+    private string ParsePerson(List<string> lines)
     {
-        List<string> split = input.Split('|').ToList();
-        string name = $"<name>{split[1]}</name>";
-        string year = $"<year>{split[2]}</year>";
-        return $"<dateofbirth>\n{name}\n{year}\n</dateofbirth>";
-    }
+        var result = new StringBuilder();
+        result.Append("\t<person>\n");
+        var hasFamily = false;
 
-    public string ConvertAddress(string input)
-    {
-        List<string> split = input.Split('|').ToList();
-        string street = $"<street>{split[1]}</street>";
-        string city = $"<city>{split[2]}</city>";
-        string zip = $"<zip>{split[3]}</zip>";
-        return $"<address>\n{street}\n{city}\n{zip}\n</address>";
-    }
+        foreach (var line in lines)
+        {
+            {
+                switch (LineTypeHelper.GetLineType(line)) {
+                    case LineTypeHelper.LineType.FullName:
+                        result.Append(_lineConverter.ConvertFullName(line));
+                        break;
+                    case LineTypeHelper.LineType.Phone:
+                        result.Append(_lineConverter.ConvertPhone(line));
+                        break;
+                    case LineTypeHelper.LineType.Address:
+                        result.Append(_lineConverter.ConvertAddress(line));
+                        break;
+                    case LineTypeHelper.LineType.Family:
+                        if (hasFamily)
+                        {
+                            result.Append("</family>\n");
+                        }                        
+                        result.Append(_lineConverter.ConvertFamily(line));
+                        hasFamily = true;
+                        break;
+                }
+            }
+        }
 
-    public string ConvertPhone(string input)
-    {
-        List<string> split = input.Split('|').ToList();
-        string mobile = $"<mobile>{split[1]}</mobile>";
-        string landline = $"<landline>{split[2]}</landline>";
-        return $"<phone>\n{mobile}\n{landline}\n</phone>";
-    }
-
-    public string ConvertFullName(string input)
-    {
-        List<string> split = input.Split('|').ToList();
-
-        string firstname = $"<firstname>{split[1]}</firstname>";
-        string lastname = $"<lastname>{split[2]}</lastname>";
-        return $"{firstname}\n{lastname}";
+        if (hasFamily)
+        {
+            result.Append("</family>\n");
+        }
+        result.Append("\t</person>\n");
+        return result.ToString();
     }
 }

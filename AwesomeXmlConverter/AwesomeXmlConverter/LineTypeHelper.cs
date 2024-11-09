@@ -7,7 +7,7 @@ public static class LineTypeHelper
         FullName = 'P',
         Phone = 'T',
         Address = 'A',
-        DateOfBirth = 'F',
+        Family = 'F',
     }
     
     public static bool IsValidLineType(string input)
