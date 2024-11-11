@@ -1,14 +1,14 @@
 namespace AwesomeXmlConverter;
 
 public class Person(
-    string firstName,
-    string lastName,
+    string firstname,
+    string lastname,
     Address? address,
     Phone? phone,
     List<FamilyMember>? family)
 {
-    public string FirstName { get; } = firstName;
-    public string LastName { get; } = lastName;
+    public string Firstname { get; } = firstname;
+    public string Lastname { get; } = lastname;
     public Address? Address { get; set; } = address;
     public Phone? Phone { get; set; } = phone;
     public List<FamilyMember>? Family { get; set; } = family;

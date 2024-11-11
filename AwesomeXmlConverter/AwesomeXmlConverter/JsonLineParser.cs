@@ -6,8 +6,8 @@ public class JsonLineParser
     {
         List<string> split = line.Split('|').ToList();
         return new Person(
-            firstName: split[1],
-            lastName: split[2],
+            firstname: split[1],
+            lastname: split[2],
             null,
             null,
             null);

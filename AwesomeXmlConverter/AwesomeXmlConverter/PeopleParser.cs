@@ -1,4 +1,3 @@
-using System.Xml;
 using static AwesomeXmlConverter.LineValidator;
 
 namespace AwesomeXmlConverter;
@@ -7,9 +6,9 @@ public class PeopleParser
 {
     private readonly JsonLineParser _jsonLineParser = new();
 
-    public class PeopleObject(List<Person> people)
+    public class PeopleObject(List<Person> person)
     {
-        public List<Person> People { get; } = people;
+        public List<Person> Person { get; } = person;
     }
 
     public PeopleObject ParseLines(List<string> validatedLines)
@@ -22,7 +21,7 @@ public class PeopleParser
         var peopleDictionary = GroupLinesIntoPeople(validatedLines);
         foreach (var person in peopleDictionary)
         {
-            people.People.Add(ParsePerson(person.Value));
+            people.Person.Add(ParsePerson(person.Value));
         }
 
         return people;
@@ -39,6 +38,8 @@ public class PeopleParser
         {
             switch (LineTypeHelper.GetLineType(line))
             {
+                case LineTypeHelper.LineType.FullName:
+                    break;
                 case LineTypeHelper.LineType.Phone:
                     if(currentFamilyMember is not null)
                     {
@@ -73,6 +74,8 @@ public class PeopleParser
                     }
                     currentFamilyMember = _jsonLineParser.ParseFamilyMember(line);
                     break;
+                default:
+                    throw new Exception($"Illegal line in person: {line}");
             }
         }
 
@@ -96,7 +99,6 @@ public class PeopleParser
     {
         var people = new Dictionary<int, List<string>>();
         
-        // Person 0 catches lines before the first FullName line
         var currentPerson = 0;
         foreach (var line in lines)
         {
@@ -104,14 +106,15 @@ public class PeopleParser
             if (lineType == LineTypeHelper.LineType.FullName)
             {
                 currentPerson++;
-                people.Add(currentPerson, new List<string>());
+                people.Add(currentPerson, []);
+            } 
+            else if (currentPerson == 0)
+            {
+                continue;
             }
 
             people[currentPerson].Add(line);
         }
-        
-        // Remove Person 0
-        people.Remove(0);
 
         return people;
     }

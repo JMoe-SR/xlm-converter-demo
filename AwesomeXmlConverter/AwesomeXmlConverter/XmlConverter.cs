@@ -1,33 +1,33 @@
 using System.Xml;
 using Newtonsoft.Json;
-using Formatting = Newtonsoft.Json.Formatting;
 using People = AwesomeXmlConverter.PeopleParser.PeopleObject;
 
 namespace AwesomeXmlConverter;
 
 public class XmlConverter
 {
+    // @TODO: Add tests for this class if needed
     public XmlDocument? ConvertJsonToXml(People people)
     {
         // Configure JSON serialization settings to ignore null values
+        // and use camelCase property names
         var jsonSettings = new JsonSerializerSettings
         {
             NullValueHandling = NullValueHandling.Ignore,
-            Formatting = Formatting.Indented
+            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
         };
         
         string jsonString = JsonConvert.SerializeObject(people, jsonSettings);
 
-        return JsonConvert.DeserializeXmlNode(jsonString, "People");  }
+        return JsonConvert.DeserializeXmlNode(jsonString, "people");  
+    }
 
-    public void WriteXml(XmlDocument? result, string filename)
+    public void WriteXml(XmlDocument? result, string filepath)
     {
         if (result != null)
         {
-            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Output", filename);
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-            result.Save(filePath);
-            Console.WriteLine($"XML file saved to {filePath}");
+            result.Save(filepath);
+            Console.WriteLine($"XML file saved to {filepath}");
         }
         else
         {

@@ -10,8 +10,8 @@ public class JsonLineParserTest
     public void CanParseFullName()
     {
         var result = _parser.ParseFullName("P|Carl Gustaf|Bernadotte");
-        Assert.That(result.FirstName, Is.EqualTo("Carl Gustaf"));
-        Assert.That(result.LastName, Is.EqualTo("Bernadotte"));
+        Assert.That(result.Firstname, Is.EqualTo("Carl Gustaf"));
+        Assert.That(result.Lastname, Is.EqualTo("Bernadotte"));
     }
     
     [Test]
