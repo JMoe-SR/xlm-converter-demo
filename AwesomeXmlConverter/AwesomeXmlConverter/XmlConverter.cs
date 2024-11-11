@@ -1,86 +1,37 @@
-using System.Text;
+using System.Xml;
+using Newtonsoft.Json;
+using Formatting = Newtonsoft.Json.Formatting;
+using People = AwesomeXmlConverter.PeopleParser.PeopleObject;
 
 namespace AwesomeXmlConverter;
 
 public class XmlConverter
 {
-    private readonly LineValidator _lineValidator = new();
-    private readonly LineConverter _lineConverter = new();
-
-    public string ConvertLinesToXml(List<string> lines)
+    public XmlDocument? ConvertJsonToXml(People people)
     {
-        // filter out invalid lines
-        lines = lines.Where(line => _lineValidator.ValidateLine(line)).ToList();
-
-        var result = new StringBuilder();
-        result.Append("<people>\n");
-
-        // group lines into people and parse each person individually
-        var people = GroupLinesIntoPeople(lines);
-        foreach (var person in people)
+        // Configure JSON serialization settings to ignore null values
+        var jsonSettings = new JsonSerializerSettings
         {
-            result.Append(ParsePerson(person.Value));
-        }
+            NullValueHandling = NullValueHandling.Ignore,
+            Formatting = Formatting.Indented
+        };
+        
+        string jsonString = JsonConvert.SerializeObject(people, jsonSettings);
 
-        result.Append("</people>");
-        return result.ToString();
-    }
+        return JsonConvert.DeserializeXmlNode(jsonString, "People");  }
 
-    private Dictionary<int, List<string>> GroupLinesIntoPeople(List<string> lines)
+    public void WriteXml(XmlDocument? result, string filename)
     {
-        var people = new Dictionary<int, List<string>>();
-        int currentPerson = 0;
-        foreach (var line in lines)
+        if (result != null)
         {
-            var lineType = LineTypeHelper.GetLineType(line);
-            if (lineType == LineTypeHelper.LineType.FullName)
-            {
-                currentPerson++;
-                people.Add(currentPerson, new List<string>());
-            }
-
-            people[currentPerson].Add(line);
+            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Output", filename);
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            result.Save(filePath);
+            Console.WriteLine($"XML file saved to {filePath}");
         }
-
-        return people;
-    }
-
-    private string ParsePerson(List<string> lines)
-    {
-        var result = new StringBuilder();
-        result.Append("\t<person>\n");
-        var hasFamily = false;
-
-        foreach (var line in lines)
+        else
         {
-            {
-                switch (LineTypeHelper.GetLineType(line)) {
-                    case LineTypeHelper.LineType.FullName:
-                        result.Append(_lineConverter.ConvertFullName(line));
-                        break;
-                    case LineTypeHelper.LineType.Phone:
-                        result.Append(_lineConverter.ConvertPhone(line));
-                        break;
-                    case LineTypeHelper.LineType.Address:
-                        result.Append(_lineConverter.ConvertAddress(line));
-                        break;
-                    case LineTypeHelper.LineType.Family:
-                        if (hasFamily)
-                        {
-                            result.Append("</family>\n");
-                        }                        
-                        result.Append(_lineConverter.ConvertFamily(line));
-                        hasFamily = true;
-                        break;
-                }
-            }
+            Console.WriteLine("Failed to convert lines to XML.");
         }
-
-        if (hasFamily)
-        {
-            result.Append("</family>\n");
-        }
-        result.Append("\t</person>\n");
-        return result.ToString();
     }
 }

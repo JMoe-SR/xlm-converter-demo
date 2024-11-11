@@ -4,19 +4,13 @@ namespace TestProject;
 
 public class LineTypeHelperTest
 {
-    private string input1 = "P|Carl Gustaf|Bernadotte";
-    private string input2 = "T|0768-101801|08-101801";
-    private string input3 = "A|Drottningholms slott|Stockholm|10001";
-    private string input4 = "F|Victoria|1977";
-    private string input11 = "½";
-    
     [Test]
     public void CanAssignLineType()
     {
-        var resultP = LineTypeHelper.GetLineType(input1);
-        var resultT = LineTypeHelper.GetLineType(input2);
-        var resultA = LineTypeHelper.GetLineType(input3);
-        var resultF = LineTypeHelper.GetLineType(input4);
+        var resultP = LineTypeHelper.GetLineType(TestData.GetValidFullNameLine);
+        var resultT = LineTypeHelper.GetLineType(TestData.GetValidPhoneLine);
+        var resultA = LineTypeHelper.GetLineType(TestData.GetValidAddressLine);
+        var resultF = LineTypeHelper.GetLineType(TestData.GetValidFamilyMemberLine);
 
         var expectedP = LineTypeHelper.LineType.FullName;
         var expectedT = LineTypeHelper.LineType.Phone;
@@ -32,7 +26,16 @@ public class LineTypeHelperTest
     [Test]
     public void CanDetectInvalidLineType()
     {
-        var result11 = LineTypeHelper.GetLineType(input11);
-        Assert.That(result11, Is.EqualTo(null));
+        var result1 = LineTypeHelper.GetLineType(TestData.GetInvalidLineType);
+        var result2 = LineTypeHelper.GetLineType(TestData.GetInvalidLineNoSeparators);
+        var result3 = LineTypeHelper.GetLineType(TestData.GetInvalidLineEmpty);
+        var result4 = LineTypeHelper.GetLineType(TestData.GetInvalidLineEmpty2);
+        var result5 = LineTypeHelper.GetLineType(TestData.GetInvalidLineEmpty3);
+        
+        Assert.That(result1, Is.EqualTo(null));
+        Assert.That(result2, Is.EqualTo(null));
+        Assert.That(result3, Is.EqualTo(null));
+        Assert.That(result4, Is.EqualTo(null));
+        Assert.That(result5, Is.EqualTo(null));
     }
 }
